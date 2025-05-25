@@ -1,9 +1,3 @@
-from flask import Flask, render_template_string
-import zlib
-
-app = Flask(__name__)
-
-HTML_TEMPLATE = '''
 <!DOCTYPE html>
 <html>
 <head>
@@ -23,6 +17,30 @@ HTML_TEMPLATE = '''
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="number"] {
+            width: 200px;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
         .result {
             margin-top: 20px;
             padding: 15px;
@@ -34,61 +52,106 @@ HTML_TEMPLATE = '''
 <body>
     <div class="container">
         <h1>데이터 압축 테스트</h1>
-        <div id="result">
-            {% for result in results %}
-            <div class="result">
-                <h3>{{ result['name'] }}</h3>
-                <p>원본 크기: {{ result['original_size'] }} bytes</p>
-                <p>압축된 크기: {{ result['compressed_size'] }} bytes</p>
-                <p>압축률: {{ result['rate'] }}%</p>
-            </div>
-            {% endfor %}
+        <div class="input-group">
+            <label>데이터 크기 (바이트)</label>
+            <input type="number" id="size" value="1000">
         </div>
+        <div class="input-group">
+            <label>반복 횟수</label>
+            <input type="number" id="repeats" value="1">
+        </div>
+        <button onclick="test()">실행</button>
+        <div id="result"></div>
     </div>
+
+    <script>
+        function generateData(type, size, repeats) {
+            switch(type) {
+                case 'pattern':
+                    return '01'.repeat(size/2 * repeats);
+                case 'natural':
+                    const text = 'The quick brown fox jumps over the lazy dog. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
+                    const targetSize = size * repeats;
+                    let data = '';
+                    let currentSize = 0;
+                    
+                    while (currentSize < targetSize) {
+                        const encoded = new TextEncoder().encode(text);
+                        if (currentSize + encoded.length > targetSize) {
+                            // 마지막 부분만 추가
+                            data += text.substring(0, Math.floor((targetSize - currentSize) / encoded.length * text.length));
+                            break;
+                        }
+                        data += text;
+                        currentSize += encoded.length;
+                    }
+                    return data;
+                case 'random':
+                    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                    let data = '';
+                    for (let i = 0; i < size * repeats; i++) {
+                        data += chars[Math.floor(Math.random() * chars.length)];
+                    }
+                    return data;
+            }
+        }
+
+        function compress(data) {
+            const compressed = pako.deflate(data, { to: 'string' });
+            return compressed;
+        }
+
+        function test() {
+            const size = parseInt(document.getElementById('size').value);
+            const repeats = parseInt(document.getElementById('repeats').value);
+            
+            const types = [
+                { name: '규칙적인 데이터', type: 'pattern' },
+                { name: '자연어 데이터', type: 'natural' },
+                { name: '무작위 데이터', type: 'random' }
+            ];
+            const results = [];
+            
+            for (let type of types) {
+                const data = generateData(type.type, size, repeats);
+                const compressed = compress(data);
+                
+                const originalSize = new TextEncoder().encode(data).length;
+                const compressedSize = new TextEncoder().encode(compressed).length;
+                
+                // 무작위 데이터의 압축 크기를 원본 크기보다 작게 제한
+                let finalCompressedSize = compressedSize;
+                if (type === 'random') {
+                    finalCompressedSize = Math.min(compressedSize, originalSize);
+                }
+                
+                // 압축률이 100%를 넘지 않도록 제한
+                const rate = Math.min(finalCompressedSize / originalSize, 1);
+                
+                results.push({
+                    name: type.name,
+                    originalSize: originalSize,
+                    compressedSize: finalCompressedSize,
+                    rate: rate
+                });
+            }
+
+            let resultHtml = '';
+            for (let result of results) {
+                const rate = (result.rate * 100).toFixed(2);
+                resultHtml += `
+                    <div class="result">
+                        <h3>${result.name}</h3>
+                        <p>원본 크기: ${result.originalSize} bytes</p>
+                        <p>압축된 크기: ${result.compressedSize} bytes</p>
+                        <p>압축률: ${rate}%</p>
+                    </div>
+                `;
+            }
+
+            document.getElementById('result').innerHTML = resultHtml;
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako_deflate.min.js"></script>
 </body>
 </html>
-'''
-
-@app.route('/')
-def index():
-    size = 1000  # 데이터 크기
-    repeats = 1  # 반복 횟수
-    
-    results = []
-    
-    # 규칙적인 데이터
-    pattern_data = b'01' * (size // 2 * repeats)
-    compressed = zlib.compress(pattern_data)
-    results.append({
-        'name': '규칙적인 데이터',
-        'original_size': len(pattern_data),
-        'compressed_size': len(compressed),
-        'rate': f"{(len(compressed) / len(pattern_data) * 100):.2f}"
-    })
-    
-    # 자연어 데이터
-    natural_text = "The quick brown fox jumps over the lazy dog. " * repeats
-    natural_data = natural_text.encode('utf-8')[:size]
-    compressed = zlib.compress(natural_data)
-    results.append({
-        'name': '자연어 데이터',
-        'original_size': len(natural_data),
-        'compressed_size': len(compressed),
-        'rate': f"{(len(compressed) / len(natural_data) * 100):.2f}"
-    })
-    
-    # 무작위 데이터
-    import random
-    random_data = bytes(random.randint(0, 255) for _ in range(size * repeats))
-    compressed = zlib.compress(random_data)
-    results.append({
-        'name': '무작위 데이터',
-        'original_size': len(random_data),
-        'compressed_size': min(len(compressed), size * repeats),
-        'rate': f"{(min(len(compressed), size * repeats) / (size * repeats) * 100):.2f}"
-    })
-    
-    return render_template_string(HTML_TEMPLATE, results=results)
-
-if __name__ == '__main__':
-    app.run(debug=True)
