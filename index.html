@@ -3,14 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <title>데이터 압축 테스트</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="number"] {
+            width: 200px;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        .chart {
+            height: 100px;
+            margin: 10px 0;
+            background: linear-gradient(to right, #4CAF50 0%, #4CAF50 0%, #f44336 0%, #f44336 100%);
+        }
+        .chart::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to right, #4CAF50 0%, #4CAF50 0%, #f44336 0%, #f44336 100%);
+        }
+    </style>
 </head>
 <body>
-    <h1>데이터 압축 테스트</h1>
-    <div>
-        <label>데이터 크기: <input type="number" id="size" value="1000"></label>
+    <div class="container">
+        <h1>데이터 압축 테스트</h1>
+        <div class="input-group">
+            <label>데이터 크기</label>
+            <input type="number" id="size" value="1000">
+        </div>
         <button onclick="test()">실행</button>
+        <div id="result"></div>
     </div>
-    <div id="result"></div>
 
     <script>
         function generateData(type, size) {
@@ -44,6 +106,10 @@
             return compressed;
         }
 
+        function calculateBarWidth(rate) {
+            return `width: ${rate * 100}%`;
+        }
+
         function test() {
             const size = parseInt(document.getElementById('size').value);
             
@@ -73,8 +139,9 @@
             let resultHtml = '';
             for (let result of results) {
                 resultHtml += `
-                    <div style="margin: 10px 0; padding: 10px; border: 1px solid #ccc;">
-                        <p>데이터 종류: ${result.name}</p>
+                    <div class="result">
+                        <h3>${result.name}</h3>
+                        <div class="chart" style="${calculateBarWidth(result.rate)}"></div>
                         <p>원본 크기: ${result.originalSize} bytes</p>
                         <p>압축된 크기: ${result.compressedSize} bytes</p>
                         <p>압축률: ${result.rate.toFixed(3)}</p>
