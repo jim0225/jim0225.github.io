@@ -8,18 +8,16 @@
     <h1>데이터 압축 테스트</h1>
     <div>
         <label>데이터 크기: <input type="number" id="size" value="1000"></label>
-        <label>반복 횟수: <input type="number" id="repeats" value="5"></label>
+        <button onclick="test()">실행</button>
     </div>
-    <button onclick="test()">실행</button>
     <div id="result"></div>
 
     <script>
-        function generateData(size, repeats) {
+        function generateData(size) {
             let data = '';
             const patterns = ['A', 'B', 'C', 'D', 'E'];
             for (let i = 0; i < size; i++) {
-                const pattern = patterns[i % patterns.length];
-                data += pattern.repeat(repeats);
+                data += patterns[i % patterns.length];
             }
             return data;
         }
@@ -41,11 +39,10 @@
 
         function test() {
             const size = parseInt(document.getElementById('size').value);
-            const repeats = parseInt(document.getElementById('repeats').value);
-            const data = generateData(size, repeats);
+            const data = generateData(size);
             const compressed = compress(data);
             
-            const originalSize = size * repeats;
+            const originalSize = size;
             const compressedSize = compressed.length;
             const rate = ((compressedSize / originalSize) * 100).toFixed(2);
             
