@@ -70,22 +70,7 @@
                 case 'pattern':
                     return '01'.repeat(size/2 * repeats);
                 case 'natural':
-                    const text = 'The quick brown fox jumps over the lazy dog. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
-                    const targetSize = size * repeats;
-                    let data = '';
-                    let currentSize = 0;
-                    
-                    while (currentSize < targetSize) {
-                        const encoded = new TextEncoder().encode(text);
-                        if (currentSize + encoded.length > targetSize) {
-                            // 마지막 부분만 추가
-                            data += text.substring(0, Math.floor((targetSize - currentSize) / encoded.length * text.length));
-                            break;
-                        }
-                        data += text;
-                        currentSize += encoded.length;
-                    }
-                    return data;
+                    return 'The quick brown fox jumps over the lazy dog.'.repeat(size/43 * repeats);
                 case 'random':
                     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
                     let data = '';
@@ -119,19 +104,16 @@
                 const originalSize = new TextEncoder().encode(data).length;
                 const compressedSize = new TextEncoder().encode(compressed).length;
                 
-                // 무작위 데이터의 압축 크기를 원본 크기보다 작게 제한
-                let finalCompressedSize = compressedSize;
-                if (type === 'random') {
-                    finalCompressedSize = Math.min(compressedSize, originalSize);
+                // 압축률 계산 수정
+                let rate = 0;
+                if (originalSize > 0) {
+                    rate = compressedSize / originalSize;
                 }
-                
-                // 압축률이 100%를 넘지 않도록 제한
-                const rate = Math.min(finalCompressedSize / originalSize, 1);
                 
                 results.push({
                     name: type.name,
                     originalSize: originalSize,
-                    compressedSize: finalCompressedSize,
+                    compressedSize: compressedSize,
                     rate: rate
                 });
             }
