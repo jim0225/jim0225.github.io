@@ -8,18 +8,31 @@
     <h1>데이터 압축 테스트</h1>
     <div>
         <label>데이터 크기: <input type="number" id="size" value="1000"></label>
-        <button onclick="test()">실행</button>
+        <label>반복 횟수: <input type="number" id="repeats" value="5"></label>
     </div>
+    <button onclick="test()">실행</button>
     <div id="result"></div>
 
     <script>
-        function generateData(size) {
-            let data = '';
-            const patterns = ['A', 'B', 'C', 'D', 'E'];
-            for (let i = 0; i < size; i++) {
-                data += patterns[i % patterns.length];
+        function generateData(type, size, repeats) {
+            switch(type) {
+                case 'repeating':
+                    return 'A'.repeat(size * repeats);
+                case 'natural':
+                    const patterns = ['A', 'B', 'C', 'D', 'E'];
+                    let data = '';
+                    for (let i = 0; i < size; i++) {
+                        data += patterns[i % patterns.length].repeat(repeats);
+                    }
+                    return data;
+                case 'random':
+                    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                    let data = '';
+                    for (let i = 0; i < size * repeats; i++) {
+                        data += chars[Math.floor(Math.random() * chars.length)];
+                    }
+                    return data;
             }
-            return data;
         }
 
         function compress(data) {
@@ -39,18 +52,40 @@
 
         function test() {
             const size = parseInt(document.getElementById('size').value);
-            const data = generateData(size);
-            const compressed = compress(data);
+            const repeats = parseInt(document.getElementById('repeats').value);
             
-            const originalSize = size;
-            const compressedSize = compressed.length;
-            const rate = ((compressedSize / originalSize) * 100).toFixed(2);
+            const types = ['repeating', 'natural', 'random'];
+            const results = [];
             
-            document.getElementById('result').innerHTML = `
-                <p>원본 크기: ${originalSize} bytes</p>
-                <p>압축된 크기: ${compressedSize} bytes</p>
-                <p>압축률: ${rate}%</p>
-            `;
+            for (let type of types) {
+                const data = generateData(type, size, repeats);
+                const compressed = compress(data);
+                
+                const originalSize = data.length;
+                const compressedSize = compressed.length;
+                const rate = ((compressedSize / originalSize) * 100).toFixed(2);
+                
+                results.push({
+                    type: type,
+                    originalSize: originalSize,
+                    compressedSize: compressedSize,
+                    rate: rate
+                });
+            }
+
+            let resultHtml = '';
+            for (let result of results) {
+                resultHtml += `
+                    <div style="margin: 10px 0; padding: 10px; border: 1px solid #ccc;">
+                        <h3>${result.type} 데이터</h3>
+                        <p>원본 크기: ${result.originalSize} bytes</p>
+                        <p>압축된 크기: ${result.compressedSize} bytes</p>
+                        <p>압축률: ${result.rate}%</p>
+                    </div>
+                `;
+            }
+
+            document.getElementById('result').innerHTML = resultHtml;
         }
     </script>
 </body>
