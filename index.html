@@ -15,12 +15,12 @@
     <script>
         function generateData(type, size) {
             switch(type) {
-                case 'repeating':
-                    return 'A'.repeat(size);
+                case 'pattern':
+                    return 'ABC'.repeat(size/3);
                 case 'natural':
-                    return 'The quick brown fox jumps over the lazy dog '.repeat(size/43);
+                    return '안녕하세요. 반갑습니다. 오늘 날씨가 좋네요. '.repeat(size/25);
                 case 'random':
-                    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                    const chars = '가나다라마바사아자차카타파하';
                     let data = '';
                     for (let i = 0; i < size; i++) {
                         data += chars[Math.floor(Math.random() * chars.length)];
@@ -48,7 +48,7 @@
             const size = parseInt(document.getElementById('size').value);
             
             const types = [
-                { name: '규칙적인 데이터', type: 'repeating' },
+                { name: '패턴 데이터', type: 'pattern' },
                 { name: '자연어 데이터', type: 'natural' },
                 { name: '무작위 데이터', type: 'random' }
             ];
@@ -60,7 +60,7 @@
                 
                 const originalSize = data.length;
                 const compressedSize = compressed.length;
-                const rate = ((compressedSize / originalSize) * 100).toFixed(2);
+                const rate = compressedSize / originalSize;
                 
                 results.push({
                     name: type.name,
@@ -74,10 +74,10 @@
             for (let result of results) {
                 resultHtml += `
                     <div style="margin: 10px 0; padding: 10px; border: 1px solid #ccc;">
-                        <h3>${result.name}</h3>
+                        <p>데이터 종류: ${result.name}</p>
                         <p>원본 크기: ${result.originalSize} bytes</p>
                         <p>압축된 크기: ${result.compressedSize} bytes</p>
-                        <p>압축률: ${result.rate}%</p>
+                        <p>압축률: ${result.rate.toFixed(3)}</p>
                     </div>
                 `;
             }
