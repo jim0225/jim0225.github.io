@@ -47,11 +47,6 @@
             background-color: #f9f9f9;
             border-radius: 4px;
         }
-        .chart {
-            height: 100px;
-            margin: 10px 0;
-            background: linear-gradient(to right, #4CAF50 0%, #4CAF50 0%, #f44336 0%, #f44336 100%);
-        }
     </style>
 </head>
 <body>
@@ -61,21 +56,25 @@
             <label>데이터 크기 (바이트)</label>
             <input type="number" id="size" value="1000">
         </div>
+        <div class="input-group">
+            <label>반복 횟수</label>
+            <input type="number" id="repeats" value="1">
+        </div>
         <button onclick="test()">실행</button>
         <div id="result"></div>
     </div>
 
     <script>
-        function generateData(type, size) {
+        function generateData(type, size, repeats) {
             switch(type) {
                 case 'pattern':
-                    return '01'.repeat(size/2);
+                    return '01'.repeat(size/2 * repeats);
                 case 'natural':
-                    return 'The quick brown fox jumps over the lazy dog. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'.repeat(size/120);
+                    return 'The quick brown fox jumps over the lazy dog. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'.repeat(size/120 * repeats);
                 case 'random':
                     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
                     let data = '';
-                    for (let i = 0; i < size; i++) {
+                    for (let i = 0; i < size * repeats; i++) {
                         data += chars[Math.floor(Math.random() * chars.length)];
                     }
                     return data;
@@ -87,12 +86,9 @@
             return compressed;
         }
 
-        function calculateBarWidth(rate) {
-            return `width: ${rate * 100}%`;
-        }
-
         function test() {
             const size = parseInt(document.getElementById('size').value);
+            const repeats = parseInt(document.getElementById('repeats').value);
             
             const types = [
                 { name: '규칙적인 데이터', type: 'pattern' },
@@ -102,12 +98,14 @@
             const results = [];
             
             for (let type of types) {
-                const data = generateData(type.type, size);
+                const data = generateData(type.type, size, repeats);
                 const compressed = compress(data);
                 
                 const originalSize = new TextEncoder().encode(data).length;
                 const compressedSize = new TextEncoder().encode(compressed).length;
-                const rate = compressedSize / originalSize;
+                
+                // 압축률이 100%를 넘지 않도록 제한
+                const rate = Math.min(compressedSize / originalSize, 1);
                 
                 results.push({
                     name: type.name,
@@ -119,13 +117,13 @@
 
             let resultHtml = '';
             for (let result of results) {
+                const rate = (result.rate * 100).toFixed(2);
                 resultHtml += `
                     <div class="result">
                         <h3>${result.name}</h3>
-                        <div class="chart" style="${calculateBarWidth(result.rate)}"></div>
                         <p>원본 크기: ${result.originalSize} bytes</p>
                         <p>압축된 크기: ${result.compressedSize} bytes</p>
-                        <p>압축률: ${(result.rate * 100).toFixed(2)}%</p>
+                        <p>압축률: ${rate}%</p>
                     </div>
                 `;
             }
