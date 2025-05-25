@@ -70,11 +70,33 @@
                 case 'pattern':
                     return '01'.repeat(size/2 * repeats);
                 case 'natural':
-                    return 'The quick brown fox jumps over the lazy dog.'.repeat(size/43 * repeats);
+                    const text = 'The quick brown fox jumps over the lazy dog. ';
+                    const targetSize = size * repeats;
+                    const encoder = new TextEncoder();
+                    const encodedText = encoder.encode(text);
+                    const textLength = encodedText.length;
+                    
+                    let data = '';
+                    let currentSize = 0;
+                    
+                    while (currentSize < targetSize) {
+                        const encoded = encoder.encode(text);
+                        if (currentSize + encoded.length > targetSize) {
+                            const remaining = targetSize - currentSize;
+                            const partialText = text.substring(0, Math.floor(remaining / encoded.length * text.length));
+                            data += partialText;
+                            break;
+                        }
+                        data += text;
+                        currentSize += encoded.length;
+                    }
+                    return data;
                 case 'random':
                     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                    const targetSize = size * repeats;
+                    
                     let data = '';
-                    for (let i = 0; i < size * repeats; i++) {
+                    for (let i = 0; i < targetSize; i++) {
                         data += chars[Math.floor(Math.random() * chars.length)];
                     }
                     return data;
@@ -104,8 +126,11 @@
                 const originalSize = new TextEncoder().encode(data).length;
                 const compressedSize = new TextEncoder().encode(compressed).length;
                 
-                // 압축 크기를 원본 크기보다 작게 제한
-                const finalCompressedSize = Math.min(compressedSize, originalSize);
+                // 무작위 데이터의 압축 크기를 원본 크기보다 작게 제한
+                let finalCompressedSize = compressedSize;
+                if (type === 'random') {
+                    finalCompressedSize = Math.min(compressedSize, originalSize);
+                }
                 
                 // 압축률 계산
                 const rate = (finalCompressedSize / originalSize * 100).toFixed(2);
