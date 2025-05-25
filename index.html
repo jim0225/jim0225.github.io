@@ -81,11 +81,6 @@
             }
         }
 
-        function compress(data) {
-            const compressed = pako.deflate(data, { to: 'string' });
-            return compressed;
-        }
-
         function test() {
             const size = parseInt(document.getElementById('size').value);
             const repeats = parseInt(document.getElementById('repeats').value);
@@ -95,37 +90,22 @@
                 { name: '자연어 데이터', type: 'natural' },
                 { name: '무작위 데이터', type: 'random' }
             ];
-            const results = [];
-            
+            let resultHtml = '';
+
             for (let type of types) {
                 const data = generateData(type.type, size, repeats);
-                const compressed = compress(data);
+                const compressed = pako.deflate(data, { to: 'string' });
                 
                 const originalSize = new TextEncoder().encode(data).length;
                 const compressedSize = new TextEncoder().encode(compressed).length;
                 
-                // 압축률 계산 수정
-                let rate = 0;
-                if (originalSize > 0) {
-                    rate = compressedSize / originalSize;
-                }
+                const rate = (compressedSize / originalSize * 100).toFixed(2);
                 
-                results.push({
-                    name: type.name,
-                    originalSize: originalSize,
-                    compressedSize: compressedSize,
-                    rate: rate
-                });
-            }
-
-            let resultHtml = '';
-            for (let result of results) {
-                const rate = (result.rate * 100).toFixed(2);
                 resultHtml += `
                     <div class="result">
-                        <h3>${result.name}</h3>
-                        <p>원본 크기: ${result.originalSize} bytes</p>
-                        <p>압축된 크기: ${result.compressedSize} bytes</p>
+                        <h3>${type.name}</h3>
+                        <p>원본 크기: ${originalSize} bytes</p>
+                        <p>압축된 크기: ${compressedSize} bytes</p>
                         <p>압축률: ${rate}%</p>
                     </div>
                 `;
