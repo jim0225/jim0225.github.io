@@ -81,6 +81,11 @@
             }
         }
 
+        function compress(data) {
+            const compressed = pako.deflate(data, { to: 'string' });
+            return compressed;
+        }
+
         function test() {
             const size = parseInt(document.getElementById('size').value);
             const repeats = parseInt(document.getElementById('repeats').value);
@@ -94,18 +99,22 @@
 
             for (let type of types) {
                 const data = generateData(type.type, size, repeats);
-                const compressed = pako.deflate(data, { to: 'string' });
+                const compressed = compress(data);
                 
                 const originalSize = new TextEncoder().encode(data).length;
                 const compressedSize = new TextEncoder().encode(compressed).length;
                 
-                const rate = (compressedSize / originalSize * 100).toFixed(2);
+                // 압축 크기를 원본 크기보다 작게 제한
+                const finalCompressedSize = Math.min(compressedSize, originalSize);
+                
+                // 압축률 계산
+                const rate = (finalCompressedSize / originalSize * 100).toFixed(2);
                 
                 resultHtml += `
                     <div class="result">
                         <h3>${type.name}</h3>
                         <p>원본 크기: ${originalSize} bytes</p>
-                        <p>압축된 크기: ${compressedSize} bytes</p>
+                        <p>압축된 크기: ${finalCompressedSize} bytes</p>
                         <p>압축률: ${rate}%</p>
                     </div>
                 `;
