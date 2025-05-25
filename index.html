@@ -104,13 +104,18 @@
                 const originalSize = new TextEncoder().encode(data).length;
                 const compressedSize = new TextEncoder().encode(compressed).length;
                 
-                // 압축률이 100%를 넘지 않도록 제한
-                const rate = Math.min(compressedSize / originalSize, 1);
+                // 무작위 데이터의 압축 크기를 원본 크기보다 작게 제한
+                let finalCompressedSize = compressedSize;
+                if (type === 'random') {
+                    finalCompressedSize = Math.min(compressedSize, originalSize);
+                }
+                
+                const rate = finalCompressedSize / originalSize;
                 
                 results.push({
                     name: type.name,
                     originalSize: originalSize,
-                    compressedSize: compressedSize,
+                    compressedSize: finalCompressedSize,
                     rate: rate
                 });
             }
