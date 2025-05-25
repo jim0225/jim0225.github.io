@@ -52,22 +52,13 @@
             margin: 10px 0;
             background: linear-gradient(to right, #4CAF50 0%, #4CAF50 0%, #f44336 0%, #f44336 100%);
         }
-        .chart::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(to right, #4CAF50 0%, #4CAF50 0%, #f44336 0%, #f44336 100%);
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>데이터 압축 테스트</h1>
         <div class="input-group">
-            <label>데이터 크기</label>
+            <label>데이터 크기 (바이트)</label>
             <input type="number" id="size" value="1000">
         </div>
         <button onclick="test()">실행</button>
@@ -78,11 +69,11 @@
         function generateData(type, size) {
             switch(type) {
                 case 'pattern':
-                    return 'ABC'.repeat(size/3);
+                    return '01'.repeat(size/2);
                 case 'natural':
-                    return '안녕하세요. 반갑습니다. 오늘 날씨가 좋네요. '.repeat(size/25);
+                    return 'The quick brown fox jumps over the lazy dog. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'.repeat(size/120);
                 case 'random':
-                    const chars = '가나다라마바사아자차카타파하';
+                    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
                     let data = '';
                     for (let i = 0; i < size; i++) {
                         data += chars[Math.floor(Math.random() * chars.length)];
@@ -92,17 +83,7 @@
         }
 
         function compress(data) {
-            let compressed = '';
-            let count = 1;
-            for (let i = 1; i < data.length; i++) {
-                if (data[i] === data[i - 1]) {
-                    count++;
-                } else {
-                    compressed += data[i - 1] + (count > 1 ? count : '');
-                    count = 1;
-                }
-            }
-            compressed += data[data.length - 1] + (count > 1 ? count : '');
+            const compressed = pako.deflate(data, { to: 'string' });
             return compressed;
         }
 
@@ -114,7 +95,7 @@
             const size = parseInt(document.getElementById('size').value);
             
             const types = [
-                { name: '패턴 데이터', type: 'pattern' },
+                { name: '규칙적인 데이터', type: 'pattern' },
                 { name: '자연어 데이터', type: 'natural' },
                 { name: '무작위 데이터', type: 'random' }
             ];
@@ -124,8 +105,8 @@
                 const data = generateData(type.type, size);
                 const compressed = compress(data);
                 
-                const originalSize = data.length;
-                const compressedSize = compressed.length;
+                const originalSize = new TextEncoder().encode(data).length;
+                const compressedSize = new TextEncoder().encode(compressed).length;
                 const rate = compressedSize / originalSize;
                 
                 results.push({
@@ -144,7 +125,7 @@
                         <div class="chart" style="${calculateBarWidth(result.rate)}"></div>
                         <p>원본 크기: ${result.originalSize} bytes</p>
                         <p>압축된 크기: ${result.compressedSize} bytes</p>
-                        <p>압축률: ${result.rate.toFixed(3)}</p>
+                        <p>압축률: ${(result.rate * 100).toFixed(2)}%</p>
                     </div>
                 `;
             }
@@ -152,5 +133,6 @@
             document.getElementById('result').innerHTML = resultHtml;
         }
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako_deflate.min.js"></script>
 </body>
 </html>
