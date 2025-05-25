@@ -8,27 +8,21 @@
     <h1>데이터 압축 테스트</h1>
     <div>
         <label>데이터 크기: <input type="number" id="size" value="1000"></label>
-        <label>반복 횟수: <input type="number" id="repeats" value="5"></label>
+        <button onclick="test()">실행</button>
     </div>
-    <button onclick="test()">실행</button>
     <div id="result"></div>
 
     <script>
-        function generateData(type, size, repeats) {
+        function generateData(type, size) {
             switch(type) {
                 case 'repeating':
-                    return 'A'.repeat(size * repeats);
+                    return 'A'.repeat(size);
                 case 'natural':
-                    const patterns = ['A', 'B', 'C', 'D', 'E'];
-                    let data = '';
-                    for (let i = 0; i < size; i++) {
-                        data += patterns[i % patterns.length].repeat(repeats);
-                    }
-                    return data;
+                    return 'The quick brown fox jumps over the lazy dog '.repeat(size/43);
                 case 'random':
                     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
                     let data = '';
-                    for (let i = 0; i < size * repeats; i++) {
+                    for (let i = 0; i < size; i++) {
                         data += chars[Math.floor(Math.random() * chars.length)];
                     }
                     return data;
@@ -52,13 +46,16 @@
 
         function test() {
             const size = parseInt(document.getElementById('size').value);
-            const repeats = parseInt(document.getElementById('repeats').value);
             
-            const types = ['repeating', 'natural', 'random'];
+            const types = [
+                { name: '규칙적인 데이터', type: 'repeating' },
+                { name: '자연어 데이터', type: 'natural' },
+                { name: '무작위 데이터', type: 'random' }
+            ];
             const results = [];
             
             for (let type of types) {
-                const data = generateData(type, size, repeats);
+                const data = generateData(type.type, size);
                 const compressed = compress(data);
                 
                 const originalSize = data.length;
@@ -66,7 +63,7 @@
                 const rate = ((compressedSize / originalSize) * 100).toFixed(2);
                 
                 results.push({
-                    type: type,
+                    name: type.name,
                     originalSize: originalSize,
                     compressedSize: compressedSize,
                     rate: rate
@@ -77,7 +74,7 @@
             for (let result of results) {
                 resultHtml += `
                     <div style="margin: 10px 0; padding: 10px; border: 1px solid #ccc;">
-                        <h3>${result.type} 데이터</h3>
+                        <h3>${result.name}</h3>
                         <p>원본 크기: ${result.originalSize} bytes</p>
                         <p>압축된 크기: ${result.compressedSize} bytes</p>
                         <p>압축률: ${result.rate}%</p>
