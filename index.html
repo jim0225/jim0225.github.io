@@ -70,7 +70,24 @@
                 case 'pattern':
                     return '01'.repeat(size/2 * repeats);
                 case 'natural':
-                    return 'The quick brown fox jumps over the lazy dog. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'.repeat(size/120 * repeats);
+                    // 자연어 데이터의 크기를 size * repeats로 정확히 맞추기
+                    const text = 'The quick brown fox jumps over the lazy dog. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
+                    const encoder = new TextEncoder();
+                    const targetSize = size * repeats;
+                    let data = '';
+                    let currentSize = 0;
+                    
+                    while (currentSize < targetSize) {
+                        const encoded = encoder.encode(text);
+                        if (currentSize + encoded.length > targetSize) {
+                            // 마지막 부분만 추가
+                            data += text.substring(0, Math.floor((targetSize - currentSize) / encoded.length * text.length));
+                            break;
+                        }
+                        data += text;
+                        currentSize += encoded.length;
+                    }
+                    return data;
                 case 'random':
                     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
                     let data = '';
